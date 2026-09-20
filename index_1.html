@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pet Docs">
+<title>Pet Documents</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #182226;
+    --ink-soft: #4b5a5e;
+    --paper: #eef1ea;
+    --surface: #ffffff;
+    --line: #ccd2c2;
+    --accent: #1d5c63;
+    --accent-deep: #123b40;
+    --accent-tint: #dfe9e7;
+    --good: #3f7d4f;
+    --good-tint: #e2ede2;
+    --warn: #a9762c;
+    --warn-tint: #f3e9d8;
+    --bad: #a63d40;
+    --bad-tint: #f3dedd;
+    --muted: #8a9089;
+    --shadow: 0 1px 2px rgba(24,34,38,0.06), 0 6px 20px rgba(24,34,38,0.05);
+    --radius: 10px;
+    --font-display: 'Archivo', 'Arial Narrow', sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eef1ea;
+      --ink-soft: #b7c0ba;
+      --paper: #121a1c;
+      --surface: #182226;
+      --line: #2c3a3a;
+      --accent: #6fb6ae;
+      --accent-deep: #9fd4cc;
+      --accent-tint: #1c3232;
+      --good: #7fbf8e;
+      --good-tint: #1c3020;
+      --warn: #e0b25c;
+      --warn-tint: #362a14;
+      --bad: #e08b8b;
+      --bad-tint: #3a1f1f;
+      --muted: #79837e;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+  a { color: var(--accent-deep); }
+
+  .topbar {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+  }
+  .topbar-inner {
+    max-width: 880px;
+    margin: 0 auto;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 21px;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .brand .mark {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 2px 6px;
+    transform: translateY(-1px);
+  }
+  .device-note {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+  .storage-note {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--warn);
+    background: var(--warn-tint);
+    border: 1px solid var(--warn);
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 24px 20px 80px;
+  }
+
+  .owner-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .owner-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+  .owner-card-title {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+  }
+  .owner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px 20px;
+  }
+  .owner-field-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .owner-field-value { font-size: 14px; font-weight: 600; }
+  .owner-empty {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pet-strip { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 22px; }
+  .pet-chip {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .pet-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .pet-chip.active { color: var(--surface); background: var(--accent-deep); border-color: var(--accent-deep); }
+  .pet-chip.active .dot { background: var(--surface); }
+  .pet-chip.add { background: transparent; border-style: dashed; color: var(--accent-deep); }
+  .pet-chip-photo { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; margin: -3px 0; }
+
+  .pet-portrait {
+    width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line);
+    flex-shrink: 0;
+  }
+  .pet-portrait-placeholder {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--accent-tint); color: var(--accent-deep);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 800; font-size: 22px;
+    flex-shrink: 0;
+  }
+  .pet-title-row { display: flex; align-items: center; gap: 14px; }
+
+  .empty-state {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 48px 28px;
+    text-align: center;
+  }
+  .empty-state h2 { font-family: var(--font-display); font-size: 22px; margin: 0 0 8px; }
+  .empty-state p { color: var(--ink-soft); margin: 0 0 20px; }
+
+  .pet-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .pet-title { font-family: var(--font-display); font-weight: 800; font-size: 28px; letter-spacing: -0.01em; margin: 0; }
+  .pet-sub { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--ink-soft); text-transform: uppercase; margin-top: 4px; }
+  .pet-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .summary-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 26px; }
+  .summary-chip { font-family: var(--font-mono); font-size: 12.5px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); display: flex; align-items: center; gap: 6px; }
+  .summary-chip b { font-size: 14px; }
+  .summary-chip.bad { border-color: var(--bad); background: var(--bad-tint); color: var(--bad); }
+  .summary-chip.warn { border-color: var(--warn); background: var(--warn-tint); color: var(--warn); }
+  .summary-chip.good { border-color: var(--good); background: var(--good-tint); color: var(--good); }
+
+  .btn { font-family: var(--font-body); font-weight: 600; font-size: 13.5px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 8px 14px; cursor: pointer; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent-deep); border-color: var(--accent-deep); color: var(--surface); }
+  .btn.primary:hover { background: var(--accent); border-color: var(--accent); }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--ink-soft); }
+  .btn.small { padding: 5px 10px; font-size: 12.5px; }
+  .btn.danger { color: var(--bad); }
+
+  .category { margin-bottom: 30px; }
+  .category-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 12px; gap: 10px; }
+  .category-title { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-deep); }
+  .category-hint { font-size: 12.5px; color: var(--muted); margin-left: 10px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+  .doc-list { display: flex; flex-direction: column; gap: 10px; }
+  .doc-card { display: flex; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); align-items: flex-start; flex-wrap: wrap; }
+  .doc-card.status-good { border-left-color: var(--good); }
+  .doc-card.status-warn { border-left-color: var(--warn); }
+  .doc-card.status-bad { border-left-color: var(--bad); }
+
+  .doc-main { flex: 1 1 220px; min-width: 0; }
+  .doc-title { font-weight: 700; font-size: 15px; margin: 0 0 3px; }
+  .doc-meta { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); display: flex; gap: 10px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+  .doc-notes { font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
+  .doc-file { font-size: 12.5px; margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; }
+  .doc-thumb { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; border: 1px solid var(--line); }
+
+  .stamp { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; white-space: nowrap; border: 1px solid transparent; }
+  .stamp.good { color: var(--good); background: var(--good-tint); border-color: var(--good); }
+  .stamp.warn { color: var(--warn); background: var(--warn-tint); border-color: var(--warn); }
+  .stamp.bad { color: var(--bad); background: var(--bad-tint); border-color: var(--bad); }
+  .stamp.neutral { color: var(--muted); background: var(--accent-tint); border-color: var(--line); }
+
+  .doc-actions { display: flex; gap: 6px; align-items: center; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(18,26,28,0.45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 100; }
+  .modal { background: var(--surface); border-radius: 12px; max-width: 460px; width: 100%; padding: 24px; box-shadow: var(--shadow); }
+  .modal h3 { font-family: var(--font-display); font-size: 19px; margin: 0 0 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input[type=text], .field input[type=date], .field select, .field textarea {
+    width: 100%; font-family: var(--font-body); font-size: 14px; padding: 9px 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field input[type=file] { font-size: 13px; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .field-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+  @media (max-width: 480px) {
+    .pet-title { font-size: 23px; }
+    .doc-card { padding: 12px; }
+    .device-note { display: none; }
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">Pet Documents <span class="mark">TRAVEL DOCS</span></div>
+    <div id="storageNote"><span class="device-note">Saved only on this device</span></div>
+  </div>
+</div>
+
+<main id="app">
+  <div id="ownerCard"></div>
+  <div class="pet-strip" id="petStrip"></div>
+  <div id="content"></div>
+</main>
+
+<div id="modalRoot"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var CATEGORIES = [
+    { key: "vaccine", label: "Vaccinations", hint: "Rabies, DHPP, Bordetella, titers" },
+    { key: "health_cert", label: "Health Certificates", hint: "CVI / USDA APHIS, import permits" },
+    { key: "microchip", label: "Microchip & ID", hint: "Registration, tags, ownership" },
+    { key: "insurance", label: "Pet Insurance", hint: "Policy number, provider, renewal date" },
+    { key: "boarding", label: "Boarding & Care", hint: "Kennel, sitter, vet, feeding instructions" },
+    { key: "airline_tsa", label: "Airline & TSA", hint: "Carrier approval, reservations, in-cabin forms" },
+    { key: "other", label: "Other Documents", hint: "Boarding passes, insurance, misc." }
+  ];
+
+  var OWNER_FIELDS = [
+    { key: "ownerName", label: "Primary owner" },
+    { key: "ownerPhone", label: "Owner phone" },
+    { key: "ownerEmail", label: "Owner email" },
+    { key: "altContactName", label: "Emergency contact" },
+    { key: "altContactPhone", label: "Emergency phone" },
+    { key: "address", label: "Home address" },
+    { key: "vetName", label: "Regular vet" },
+    { key: "vetPhone", label: "Vet phone" }
+  ];
+
+  var state = {
+    pets: [],
+    documents: [],
+    ownerInfo: null,
+    activePetId: null,
+    storageOK: true
+  };
+
+  var objectUrls = {}; // docId -> object URL, so we don't re-create/leak on every render
+  var petPhotoUrls = {}; // petId -> object URL for the pet's photo
+
+  function revokePetUrl(petId) {
+    if (petPhotoUrls[petId]) {
+      URL.revokeObjectURL(petPhotoUrls[petId]);
+      delete petPhotoUrls[petId];
+    }
+  }
+
+  function petPhotoUrl(pet) {
+    if (!pet.photoBlob) return null;
+    if (!petPhotoUrls[pet.id]) {
+      petPhotoUrls[pet.id] = URL.createObjectURL(pet.photoBlob);
+    }
+    return petPhotoUrls[pet.id];
+  }
+
+  function initials(name) {
+    return (name || "?").trim().slice(0, 1).toUpperCase();
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function uid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  function docStatus(doc) {
+    if (!doc.expiryDate) return { tier: "neutral", text: "On file" };
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var exp = new Date(doc.expiryDate + "T00:00:00");
+    var diffDays = Math.round((exp - today) / 86400000);
+    if (diffDays < 0) return { tier: "bad", text: "Expired " + fmtDate(doc.expiryDate) };
+    if (diffDays <= 30) return { tier: "warn", text: diffDays === 0 ? "Expires today" : "Expires in " + diffDays + "d" };
+    return { tier: "good", text: "Valid to " + fmtDate(doc.expiryDate) };
+  }
+
+  // ---------- IndexedDB persistence ----------
+
+  var DB_NAME = "petDocumentsDB";
+  var DB_VERSION = 1;
+  var dbPromise = null;
+
+  function openDB() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
+      if (!window.indexedDB) { reject(new Error("no indexeddb")); return; }
+      var req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains("pets")) {
+          db.createObjectStore("pets", { keyPath: "id" });
+        }
+        if (!db.objectStoreNames.contains("documents")) {
+          var docs = db.createObjectStore("documents", { keyPath: "id" });
+          docs.createIndex("petId", "petId", { unique: false });
+        }
+        if (!db.objectStoreNames.contains("meta")) {
+          db.createObjectStore("meta", { keyPath: "key" });
+        }
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+    return dbPromise;
+  }
+
+  function tx(storeName, mode) {
+    return openDB().then(function (db) {
+      return db.transaction(storeName, mode).objectStore(storeName);
+    });
+  }
+
+  function reqToPromise(req) {
+    return new Promise(function (resolve, reject) {
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  function storeGetAll(storeName) {
+    return tx(storeName, "readonly").then(function (store) {
+      return reqToPromise(store.getAll());
+    });
+  }
+
+  function storePut(storeName, value) {
+    return tx(storeName, "readwrite").then(function (store) {
+      return reqToPromise(store.put(value));
+    });
+  }
+
+  function storeDelete(storeName, key) {
+    return tx(storeName, "readwrite").then(function (store) {
+      return reqToPromise(store.delete(key));
+    });
+  }
+
+  function loadAll() {
+    return Promise.all([
+      storeGetAll("pets"),
+      storeGetAll("documents"),
+      tx("meta", "readonly").then(function (store) { return reqToPromise(store.get("owner")); })
+    ]).then(function (res) {
+      state.pets = res[0].sort(function (a, b) { return (a.createdAt || "").localeCompare(b.createdAt || ""); });
+      state.documents = res[1];
+      state.ownerInfo = res[2] || null;
+      if (!state.activePetId && state.pets.length) state.activePetId = state.pets[0].id;
+      render();
+    });
+  }
+
+  function initStorage() {
+    openDB().then(loadAll).catch(function () {
+      state.storageOK = false;
+      render();
+    });
+  }
+
+  // ---------- CRUD ----------
+
+  function addPet(data) {
+    var pet = Object.assign({ id: uid(), createdAt: new Date().toISOString() }, data);
+    return storePut("pets", pet).then(function () {
+      state.pets.push(pet);
+      state.activePetId = pet.id;
+    }).catch(function () {
+      state.storageOK = false;
+      state.pets.push(pet);
+      state.activePetId = pet.id;
+    });
+  }
+
+  function updatePet(petId, data) {
+    var pet = state.pets.find(function (p) { return p.id === petId; });
+    if (!pet) return Promise.resolve();
+    if (data.photoBlob) revokePetUrl(petId);
+    var updated = Object.assign({}, pet, data);
+    return storePut("pets", updated).then(function () {
+      state.pets = state.pets.map(function (p) { return p.id === petId ? updated : p; });
+    }).catch(function () {
+      state.storageOK = false;
+      state.pets = state.pets.map(function (p) { return p.id === petId ? updated : p; });
+    });
+  }
+
+  function deletePet(petId) {
+    revokePetUrl(petId);
+    var docs = state.documents.filter(function (d) { return d.petId === petId; });
+    var ops = docs.map(function (d) {
+      revokeUrl(d.id);
+      return storeDelete("documents", d.id);
+    });
+    ops.push(storeDelete("pets", petId));
+    var finish = function () {
+      state.documents = state.documents.filter(function (d) { return d.petId !== petId; });
+      state.pets = state.pets.filter(function (p) { return p.id !== petId; });
+      if (state.activePetId === petId) {
+        state.activePetId = state.pets.length ? state.pets[0].id : null;
+      }
+    };
+    return Promise.all(ops).then(finish).catch(function () { state.storageOK = false; finish(); });
+  }
+
+  function addDocument(data) {
+    var doc = Object.assign({ id: uid(), createdAt: new Date().toISOString() }, data);
+    return storePut("documents", doc).then(function () {
+      state.documents.push(doc);
+    }).catch(function () {
+      state.storageOK = false;
+      state.documents.push(doc);
+    });
+  }
+
+  function updateDocument(docId, data) {
+    var doc = state.documents.find(function (d) { return d.id === docId; });
+    if (!doc) return Promise.resolve();
+    if (data.fileBlob) revokeUrl(docId);
+    var updated = Object.assign({}, doc, data);
+    var apply = function () {
+      state.documents = state.documents.map(function (d) { return d.id === docId ? updated : d; });
+    };
+    return storePut("documents", updated).then(apply).catch(function () { state.storageOK = false; apply(); });
+  }
+
+  function deleteDocument(doc) {
+    revokeUrl(doc.id);
+    var apply = function () {
+      state.documents = state.documents.filter(function (d) { return d.id !== doc.id; });
+    };
+    return storeDelete("documents", doc.id).then(apply).catch(function () { state.storageOK = false; apply(); });
+  }
+
+  function saveOwnerInfo(data) {
+    var record = Object.assign({ key: "owner" }, data);
+    return storePut("meta", record).then(function () {
+      state.ownerInfo = record;
+    }).catch(function () {
+      state.storageOK = false;
+      state.ownerInfo = record;
+    });
+  }
+
+  function revokeUrl(docId) {
+    if (objectUrls[docId]) {
+      URL.revokeObjectURL(objectUrls[docId]);
+      delete objectUrls[docId];
+    }
+  }
+
+  function fileUrl(doc) {
+    if (!doc.fileBlob) return null;
+    if (!objectUrls[doc.id]) {
+      objectUrls[doc.id] = URL.createObjectURL(doc.fileBlob);
+    }
+    return objectUrls[doc.id];
+  }
+
+  // ---------- rendering ----------
+
+  function render() {
+    renderTopNote();
+    renderOwnerCard();
+    renderPetStrip();
+    renderContent();
+  }
+
+  function renderTopNote() {
+    var el = document.getElementById("storageNote");
+    if (!state.storageOK) {
+      el.innerHTML = '<span class="storage-note">This browser is blocking on-device storage here &mdash; changes will disappear when you close this tab. Open the file directly in Safari (not through a link inside another app) to fix this.</span>';
+    } else {
+      el.innerHTML = '<span class="device-note">Saved only on this device</span>';
+    }
+  }
+
+  function renderOwnerCard() {
+    var el = document.getElementById("ownerCard");
+    var info = state.ownerInfo;
+    var hasAny = info && OWNER_FIELDS.some(function (f) { return info[f.key]; });
+
+    if (!hasAny) {
+      el.innerHTML = '<div class="owner-card"><div class="owner-empty">' +
+        '<span>Add owner details and an emergency/vet contact, so it travels with your pets’ paperwork.</span>' +
+        '<button class="btn small" id="addOwnerBtn">Add owner info</button>' +
+        '</div></div>';
+      document.getElementById("addOwnerBtn").addEventListener("click", openOwnerModal);
+      return;
+    }
+
+    var html = '<div class="owner-card"><div class="owner-card-head">' +
+      '<span class="owner-card-title">Owner &amp; Emergency Info</span>' +
+      '<button class="btn small" id="editOwnerBtn">Edit</button>' +
+      '</div><div class="owner-grid">';
+    OWNER_FIELDS.forEach(function (f) {
+      if (!info[f.key]) return;
+      html += '<div><div class="owner-field-label">' + escapeHtml(f.label) + '</div>' +
+        '<div class="owner-field-value">' + escapeHtml(info[f.key]) + '</div></div>';
+    });
+    html += '</div></div>';
+    el.innerHTML = html;
+    document.getElementById("editOwnerBtn").addEventListener("click", openOwnerModal);
+  }
+
+  function renderPetStrip() {
+    var strip = document.getElementById("petStrip");
+    if (!state.pets.length) { strip.innerHTML = ""; return; }
+    var html = state.pets.map(function (p) {
+      var active = p.id === state.activePetId;
+      var photo = petPhotoUrl(p);
+      var lead = photo
+        ? '<img class="pet-chip-photo" src="' + photo + '" alt="">'
+        : '<span class="dot"></span>';
+      return '<button class="pet-chip' + (active ? " active" : "") + '" data-pet="' + p.id + '">' +
+        lead + escapeHtml(p.name) + '</button>';
+    }).join("");
+    html += '<button class="pet-chip add" data-action="add-pet">+ Add pet</button>';
+    strip.innerHTML = html;
+    strip.querySelectorAll("[data-pet]").forEach(function (btn) {
+      btn.addEventListener("click", function () { state.activePetId = btn.getAttribute("data-pet"); render(); });
+    });
+    strip.querySelector('[data-action="add-pet"]').addEventListener("click", openAddPetModal);
+  }
+
+  function renderContent() {
+    var content = document.getElementById("content");
+    if (!state.pets.length) {
+      content.innerHTML =
+        '<div class="empty-state">' +
+        '<h2>Every travel paper, one place</h2>' +
+        '<p>Add a pet to start tracking vaccine records, health certificates, microchip info and airline or TSA paperwork &mdash; with expiry dates that warn you before they lapse. Everything stays on this device.</p>' +
+        '<button class="btn primary" id="emptyAddPet">Add your first pet</button>' +
+        '</div>';
+      document.getElementById("emptyAddPet").addEventListener("click", openAddPetModal);
+      return;
+    }
+
+    var pet = state.pets.find(function (p) { return p.id === state.activePetId; }) || state.pets[0];
+    var petDocs = state.documents.filter(function (d) { return d.petId === pet.id; });
+
+    var expired = 0, expiring = 0;
+    petDocs.forEach(function (d) {
+      var s = docStatus(d);
+      if (s.tier === "bad") expired++; else if (s.tier === "warn") expiring++;
+    });
+
+    var subLine = [pet.species, pet.breed].filter(Boolean).join(" · ");
+    var photo = petPhotoUrl(pet);
+    var portrait = photo
+      ? '<img class="pet-portrait" src="' + photo + '" alt="Photo of ' + escapeHtml(pet.name) + '">'
+      : '<div class="pet-portrait-placeholder">' + escapeHtml(initials(pet.name)) + '</div>';
+
+    var html = '<div class="pet-header">' +
+      '<div class="pet-title-row">' + portrait +
+      '<div><h1 class="pet-title">' + escapeHtml(pet.name) + '</h1>' +
+      (subLine ? '<div class="pet-sub">' + escapeHtml(subLine) + '</div>' : '') +
+      '</div></div>' +
+      '<div class="pet-actions">' +
+      '<button class="btn" data-action="edit-pet">Edit pet</button>' +
+      '<button class="btn danger" data-action="delete-pet">Delete pet</button>' +
+      '</div></div>';
+
+    html += '<div class="summary-row">';
+    html += '<div class="summary-chip"><b>' + petDocs.length + '</b> document' + (petDocs.length === 1 ? '' : 's') + ' on file</div>';
+    if (expired) html += '<div class="summary-chip bad"><b>' + expired + '</b> expired</div>';
+    if (expiring) html += '<div class="summary-chip warn"><b>' + expiring + '</b> expiring within 30 days</div>';
+    if (!expired && !expiring && petDocs.length) html += '<div class="summary-chip good">All documents current</div>';
+    html += '</div>';
+
+    CATEGORIES.forEach(function (cat) {
+      var docs = petDocs.filter(function (d) { return d.category === cat.key; });
+      docs.sort(function (a, b) {
+        if (!a.expiryDate && !b.expiryDate) return 0;
+        if (!a.expiryDate) return 1;
+        if (!b.expiryDate) return -1;
+        return a.expiryDate < b.expiryDate ? -1 : 1;
+      });
+      html += '<div class="category">' +
+        '<div class="category-head">' +
+        '<div><span class="category-title">' + escapeHtml(cat.label) + '</span>' +
+        '<span class="category-hint">' + escapeHtml(cat.hint) + '</span></div>' +
+        '<button class="btn small" data-add-cat="' + cat.key + '">+ Add</button>' +
+        '</div>';
+      if (docs.length) {
+        html += '<div class="doc-list">' + docs.map(renderDocCard).join("") + '</div>';
+      }
+      html += '</div>';
+    });
+
+    content.innerHTML = html;
+
+    content.querySelector('[data-action="edit-pet"]').addEventListener("click", function () { openEditPetModal(pet); });
+    content.querySelector('[data-action="delete-pet"]').addEventListener("click", function () { confirmDeletePet(pet); });
+    content.querySelectorAll("[data-add-cat]").forEach(function (btn) {
+      btn.addEventListener("click", function () { openAddDocModal(pet.id, btn.getAttribute("data-add-cat")); });
+    });
+    content.querySelectorAll("[data-edit-doc]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var doc = state.documents.find(function (d) { return d.id === btn.getAttribute("data-edit-doc"); });
+        if (doc) openEditDocModal(doc);
+      });
+    });
+    content.querySelectorAll("[data-delete-doc]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var doc = state.documents.find(function (d) { return d.id === btn.getAttribute("data-delete-doc"); });
+        if (doc) confirmDeleteDoc(doc);
+      });
+    });
+  }
+
+  function renderDocCard(doc) {
+    var status = docStatus(doc);
+    var meta = [];
+    if (doc.issueDate) meta.push("Issued " + fmtDate(doc.issueDate));
+    var fileBlock = "";
+    if (doc.fileBlob) {
+      var url = fileUrl(doc);
+      if (doc.fileType && doc.fileType.indexOf("image/") === 0) {
+        fileBlock = '<div class="doc-file"><a href="' + url + '" target="_blank" rel="noopener">' +
+          '<img class="doc-thumb" src="' + url + '" alt="Attached document"></a> ' +
+          '<a href="' + url + '" target="_blank" rel="noopener">' + escapeHtml(doc.fileName || "View file") + '</a></div>';
+      } else {
+        fileBlock = '<div class="doc-file"><a href="' + url + '" target="_blank" rel="noopener">View ' + escapeHtml(doc.fileName || "attached file") + '</a></div>';
+      }
+    }
+    return '<div class="doc-card status-' + status.tier + '">' +
+      '<div class="doc-main">' +
+      '<p class="doc-title">' + escapeHtml(doc.title) + '</p>' +
+      (meta.length ? '<div class="doc-meta">' + meta.map(escapeHtml).join(" &middot; ") + '</div>' : "") +
+      (doc.notes ? '<div class="doc-notes">' + escapeHtml(doc.notes) + '</div>' : "") +
+      fileBlock +
+      '</div>' +
+      '<span class="stamp ' + status.tier + '">' + escapeHtml(status.text) + '</span>' +
+      '<div class="doc-actions">' +
+      '<button class="btn ghost small" data-edit-doc="' + doc.id + '">Edit</button>' +
+      '<button class="btn ghost small danger" data-delete-doc="' + doc.id + '">Delete</button>' +
+      '</div>' +
+      '</div>';
+  }
+
+  // ---------- modals ----------
+
+  function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
+
+  function openModal(html) {
+    document.getElementById("modalRoot").innerHTML = '<div class="overlay" id="overlay"><div class="modal">' + html + '</div></div>';
+    document.getElementById("overlay").addEventListener("mousedown", function (e) {
+      if (e.target.id === "overlay") closeModal();
+    });
+  }
+
+  function openOwnerModal() {
+    var info = state.ownerInfo || {};
+    openModal(
+      '<h3>Owner &amp; emergency info</h3>' +
+      '<form id="ownerForm">' +
+      '<div class="field-row">' +
+      '<div class="field"><label for="ownerName">Primary owner</label><input type="text" id="ownerName" value="' + escapeHtml(info.ownerName || "") + '"></div>' +
+      '<div class="field"><label for="ownerPhone">Owner phone</label><input type="text" id="ownerPhone" value="' + escapeHtml(info.ownerPhone || "") + '"></div>' +
+      '</div>' +
+      '<div class="field"><label for="ownerEmail">Owner email</label><input type="text" id="ownerEmail" value="' + escapeHtml(info.ownerEmail || "") + '"></div>' +
+      '<div class="field-row">' +
+      '<div class="field"><label for="altContactName">Emergency contact</label><input type="text" id="altContactName" value="' + escapeHtml(info.altContactName || "") + '"></div>' +
+      '<div class="field"><label for="altContactPhone">Emergency phone</label><input type="text" id="altContactPhone" value="' + escapeHtml(info.altContactPhone || "") + '"></div>' +
+      '</div>' +
+      '<div class="field"><label for="address">Home address</label><textarea id="address">' + escapeHtml(info.address || "") + '</textarea></div>' +
+      '<div class="field-row">' +
+      '<div class="field"><label for="vetName">Regular vet</label><input type="text" id="vetName" value="' + escapeHtml(info.vetName || "") + '"></div>' +
+      '<div class="field"><label for="vetPhone">Vet phone</label><input type="text" id="vetPhone" value="' + escapeHtml(info.vetPhone || "") + '"></div>' +
+      '</div>' +
+      '<div class="modal-actions"><button type="button" class="btn" id="cancelOwner">Cancel</button>' +
+      '<button type="submit" class="btn primary">Save</button></div>' +
+      '</form>'
+    );
+    document.getElementById("cancelOwner").addEventListener("click", closeModal);
+    document.getElementById("ownerForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var data = {};
+      OWNER_FIELDS.forEach(function (f) { data[f.key] = document.getElementById(f.key).value.trim(); });
+      saveOwnerInfo(data).then(function () { closeModal(); render(); });
+    });
+  }
+
+  function openAddPetModal() {
+    openModal(
+      '<h3>Add a pet</h3>' +
+      '<form id="petForm">' +
+      '<div class="field"><label for="petName">Name</label><input type="text" id="petName" required></div>' +
+      '<div class="field-row">' +
+      '<div class="field"><label for="petSpecies">Species</label><input type="text" id="petSpecies" placeholder="Dog, Cat..."></div>' +
+      '<div class="field"><label for="petBreed">Breed</label><input type="text" id="petBreed" placeholder="Optional"></div>' +
+      '</div>' +
+      '<div class="field"><label for="petPhoto">Photo</label><input type="file" id="petPhoto" accept="image/*" capture="environment">' +
+      '<div class="field-hint">Take a new photo or choose one from your library.</div></div>' +
+      '<div class="modal-actions"><button type="button" class="btn" id="cancelPet">Cancel</button>' +
+      '<button type="submit" class="btn primary">Add pet</button></div>' +
+      '</form>'
+    );
+    document.getElementById("cancelPet").addEventListener("click", closeModal);
+    document.getElementById("petForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var name = document.getElementById("petName").value.trim();
+      if (!name) return;
+      var data = {
+        name: name,
+        species: document.getElementById("petSpecies").value.trim(),
+        breed: document.getElementById("petBreed").value.trim()
+      };
+      var photo = document.getElementById("petPhoto").files[0];
+      if (photo) { data.photoBlob = photo; data.photoType = photo.type; }
+      addPet(data).then(function () { closeModal(); render(); });
+    });
+  }
+
+  function openEditPetModal(pet) {
+    openModal(
+      '<h3>Edit pet</h3>' +
+      '<form id="petForm">' +
+      '<div class="field"><label for="petName">Name</label><input type="text" id="petName" required value="' + escapeHtml(pet.name) + '"></div>' +
+      '<div class="field-row">' +
+      '<div class="field"><label for="petSpecies">Species</label><input type="text" id="petSpecies" value="' + escapeHtml(pet.species || "") + '"></div>' +
+      '<div class="field"><label for="petBreed">Breed</label><input type="text" id="petBreed" value="' + escapeHtml(pet.breed || "") + '"></div>' +
+      '</div>' +
+      '<div class="field"><label for="petPhoto">' + (pet.photoBlob ? "Replace photo" : "Photo") + '</label><input type="file" id="petPhoto" accept="image/*" capture="environment">' +
+      '<div class="field-hint">' + (pet.photoBlob ? "Take a new photo or choose one to replace the current one." : "Take a new photo or choose one from your library.") + '</div></div>' +
+      '<div class="modal-actions"><button type="button" class="btn" id="cancelPet">Cancel</button>' +
+      '<button type="submit" class="btn primary">Save</button></div>' +
+      '</form>'
+    );
+    document.getElementById("cancelPet").addEventListener("click", closeModal);
+    document.getElementById("petForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var data = {
+        name: document.getElementById("petName").value.trim(),
+        species: document.getElementById("petSpecies").value.trim(),
+        breed: document.getElementById("petBreed").value.trim()
+      };
+      var photo = document.getElementById("petPhoto").files[0];
+      if (photo) { data.photoBlob = photo; data.photoType = photo.type; }
+      updatePet(pet.id, data).then(function () { closeModal(); render(); });
+    });
+  }
+
+  function confirmDeletePet(pet) {
+    openModal(
+      '<h3>Delete ' + escapeHtml(pet.name) + '?</h3>' +
+      '<p style="color:var(--ink-soft);font-size:13.5px;">This removes ' + escapeHtml(pet.name) + ' and every document filed under them. This can’t be undone.</p>' +
+      '<div class="modal-actions"><button type="button" class="btn" id="cancelDel">Cancel</button>' +
+      '<button type="button" class="btn danger" id="confirmDel">Delete pet</button></div>'
+    );
+    document.getElementById("cancelDel").addEventListener("click", closeModal);
+    document.getElementById("confirmDel").addEventListener("click", function () {
+      deletePet(pet.id).then(function () { closeModal(); render(); });
+    });
+  }
+
+  function categoryOptions(selected) {
+    return CATEGORIES.map(function (c) {
+      return '<option value="' + c.key + '"' + (c.key === selected ? " selected" : "") + '>' + escapeHtml(c.label) + '</option>';
+    }).join("");
+  }
+
+  function openAddDocModal(petId, category) {
+    openModal(
+      '<h3>Add document</h3>' +
+      '<form id="docForm">' +
+      '<div class="field"><label for="docCat">Category</label><select id="docCat">' + categoryOptions(category) + '</select></div>' +
+      '<div class="field"><label for="docTitle">Title</label><input type="text" id="docTitle" placeholder="e.g. Rabies certificate" required></div>' +
+      '<div class="field-row">' +
+      '<div class="field"><label for="docIssue">Issue date</label><input type="date" id="docIssue"></div>' +
+      '<div class="field"><label for="docExpiry">Expiry date</label><input type="date" id="docExpiry"></div>' +
+      '</div>' +
+      '<div class="field"><label for="docNotes">Notes</label><textarea id="docNotes" placeholder="Vet, airline, confirmation number..."></textarea></div>' +
+      '<div class="field"><label for="docFile">Attach file</label><input type="file" id="docFile" accept="image/*,application/pdf">' +
+      '<div class="field-hint">Photo or PDF of the document, optional. Stored only on this device.</div></div>' +
+      '<div class="modal-actions"><button type="button" class="btn" id="cancelDoc">Cancel</button>' +
+      '<button type="submit" class="btn primary">Add document</button></div>' +
+      '</form>'
+    );
+    document.getElementById("cancelDoc").addEventListener("click", closeModal);
+    document.getElementById("docForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var submitBtn = e.target.querySelector('button[type=submit]');
+      submitBtn.disabled = true;
+      var title = document.getElementById("docTitle").value.trim();
+      if (!title) { submitBtn.disabled = false; return; }
+      var base = {
+        petId: petId,
+        category: document.getElementById("docCat").value,
+        title: title,
+        issueDate: document.getElementById("docIssue").value || null,
+        expiryDate: document.getElementById("docExpiry").value || null,
+        notes: document.getElementById("docNotes").value.trim()
+      };
+      var file = document.getElementById("docFile").files[0];
+      if (file) {
+        base.fileBlob = file;
+        base.fileType = file.type;
+        base.fileName = file.name;
+      }
+      addDocument(base).then(function () { closeModal(); render(); });
+    });
+  }
+
+  function openEditDocModal(doc) {
+    openModal(
+      '<h3>Edit document</h3>' +
+      '<form id="docForm">' +
+      '<div class="field"><label for="docCat">Category</label><select id="docCat">' + categoryOptions(doc.category) + '</select></div>' +
+      '<div class="field"><label for="docTitle">Title</label><input type="text" id="docTitle" required value="' + escapeHtml(doc.title) + '"></div>' +
+      '<div class="field-row">' +
+      '<div class="field"><label for="docIssue">Issue date</label><input type="date" id="docIssue" value="' + escapeHtml(doc.issueDate || "") + '"></div>' +
+      '<div class="field"><label for="docExpiry">Expiry date</label><input type="date" id="docExpiry" value="' + escapeHtml(doc.expiryDate || "") + '"></div>' +
+      '</div>' +
+      '<div class="field"><label for="docNotes">Notes</label><textarea id="docNotes">' + escapeHtml(doc.notes || "") + '</textarea></div>' +
+      '<div class="field"><label for="docFile">Replace attached file</label><input type="file" id="docFile" accept="image/*,application/pdf">' +
+      '<div class="field-hint">' + (doc.fileName ? "Currently: " + escapeHtml(doc.fileName) : "No file attached yet.") + '</div></div>' +
+      '<div class="modal-actions"><button type="button" class="btn" id="cancelDoc">Cancel</button>' +
+      '<button type="submit" class="btn primary">Save changes</button></div>' +
+      '</form>'
+    );
+    document.getElementById("cancelDoc").addEventListener("click", closeModal);
+    document.getElementById("docForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var submitBtn = e.target.querySelector('button[type=submit]');
+      submitBtn.disabled = true;
+      var data = {
+        category: document.getElementById("docCat").value,
+        title: document.getElementById("docTitle").value.trim(),
+        issueDate: document.getElementById("docIssue").value || null,
+        expiryDate: document.getElementById("docExpiry").value || null,
+        notes: document.getElementById("docNotes").value.trim()
+      };
+      var file = document.getElementById("docFile").files[0];
+      if (file) {
+        data.fileBlob = file;
+        data.fileType = file.type;
+        data.fileName = file.name;
+      }
+      updateDocument(doc.id, data).then(function () { closeModal(); render(); });
+    });
+  }
+
+  function confirmDeleteDoc(doc) {
+    openModal(
+      '<h3>Delete this document?</h3>' +
+      '<p style="color:var(--ink-soft);font-size:13.5px;">&ldquo;' + escapeHtml(doc.title) + '&rdquo; will be removed. This can’t be undone.</p>' +
+      '<div class="modal-actions"><button type="button" class="btn" id="cancelDel">Cancel</button>' +
+      '<button type="button" class="btn danger" id="confirmDel">Delete</button></div>'
+    );
+    document.getElementById("cancelDel").addEventListener("click", closeModal);
+    document.getElementById("confirmDel").addEventListener("click", function () {
+      deleteDocument(doc).then(function () { closeModal(); render(); });
+    });
+  }
+
+  render();
+  initStorage();
+})();
+</script>
+</body>
+</html>
